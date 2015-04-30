@@ -10,26 +10,49 @@ License: GPLv2+
 */
 
 // Useful global constants
-define( 'PW_GALLERY_URL', plugin_dir_url( __FILE__ ) );
+define( 'PW_GALLERY_URL', get_template_directory_uri( __FILE__ ) );
 
 /**
  * Render field
  */
 function pw_gallery_field( $field, $meta ) {
-	wp_enqueue_script( 'pw_gallery_init', PW_GALLERY_URL . 'js/script.js', array( 'jquery' ), null );
-
+	wp_enqueue_script( 'pw_gallery_init', PW_GALLERY_URL . '/cmb-field-gallery/js/script.js', array( 'jquery' ), null );
+	
 	if ( ! empty( $meta ) ) {
 		$meta = implode( ',', $meta );
 	}
-
+	
+	$img_size = $field->args( 'preview_size' ) ? $field->args( 'preview_size' ) : 150;
+	
 	echo '<div class="pw-gallery">';
+ 
+$gallery_images = get_post_meta( get_the_ID(), '_YOUR_CUSTOM_KEY', true ); ?>
+<?php if ( ! empty( $gallery_images )) { 
 	echo '	<input type="hidden" id="' . $field->args( 'id' ) . '" name="' . $field->args( 'id' ) . '" value="' . $meta . '" />';
+} else {
+echo '	<input type="hidden" id="' . $field->args( 'id' ) . '" name="' . $field->args( 'id' ) . '" value="0" />';
+} 
+
+
 	echo '	<input type="button" class="button" value="' . ( $field->args( 'button' ) ? $field->args( 'button' ) : 'Manage gallery' ) . '" style="margin-left: 0;" />';
 	echo '</div>';
 
 	$desc = $field->args( 'desc' );
 	if ( ! empty( $desc ) ) echo '<p class="cmb2-metabox-description">' . $desc . '</p>';
+	
+	echo '<ul id="'.$field->args( 'id' ).'-status" class="cmb2-media-status">';
+	$ids = explode(',',$meta);
+	
+	foreach($ids as $id) { 
+  
+				 echo '<li class="img-status">'. wp_get_attachment_image( $id, $img_size ) .'</li>';  
+				 
+ 	}
+
+	echo '</ul>';
+
 }
+
 add_filter( 'cmb2_render_pw_gallery', 'pw_gallery_field', 10, 2 );
 
 
@@ -42,6 +65,6 @@ function pw_gallery_field_sanitise( $meta_value, $field ) {
 	} else {
 		$meta_value = explode( ',', $meta_value );
 	}
-
+	
 	return $meta_value;
 }
